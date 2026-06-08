@@ -35,14 +35,24 @@ export default function Products() {
     <div className="min-h-screen bg-ivory">
 
       {/* Header */}
-      <div className="bg-cream py-20 px-6 text-center">
-        <p className="font-dm text-xs tracking-widest uppercase text-taupe mb-4">
-          Aevora Collection
-        </p>
-        <h1 className="font-cormorant text-6xl text-espresso mb-4">The Shop</h1>
-        <p className="font-dm text-sm text-taupe max-w-md mx-auto leading-relaxed">
-          Every formula engineered for skin fitness. Science-backed, results-driven.
-        </p>
+      <div className="relative overflow-hidden min-h-[50vh] flex items-center justify-center">
+        <img
+          src="https://images.unsplash.com/photo-1570194065650-d99fb4ee1f93?w=1600&q=80"
+          alt="Shop hero"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-espresso/50" />
+        <div className="relative z-10 px-6 py-24 text-center text-ivory max-w-3xl mx-auto">
+          <p className="font-dm text-xs tracking-[0.2em] uppercase text-ivory/80 mb-4">
+            Aevora Collection
+          </p>
+          <h1 className="font-cormorant text-6xl uppercase tracking-[0.2em] text-ivory mb-4">
+            The Shop
+          </h1>
+          <p className="font-dm text-sm text-ivory/80 leading-7">
+            Every formula engineered for skin fitness. Science-backed, results-driven.
+          </p>
+        </div>
       </div>
 
       {/* Filters */}
