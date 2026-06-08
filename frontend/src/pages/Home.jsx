@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import axios from 'axios'
 import ProductCard from '../components/ProductCard'
@@ -6,10 +6,19 @@ import AIAdvisor from '../components/AIAdvisor'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
+const videos = [
+  '/videos/skin1.mp4',
+  '/videos/skin2.mp4',
+  '/videos/skin3.mp4',
+]
+
 export default function Home() {
   const [featured, setFeatured] = useState([])
   const [loading, setLoading] = useState(true)
   const [advisorOpen, setAdvisorOpen] = useState(false)
+  const [currentVideo, setCurrentVideo] = useState(0)
+  const [transitioning, setTransitioning] = useState(false)
+  const videoRef = useRef(null)
 
   useEffect(() => {
     axios.get(`${API}/products?featured=true`)
@@ -18,45 +27,99 @@ export default function Home() {
       .finally(() => setLoading(false))
   }, [])
 
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+    video.src = videos[currentVideo]
+    video.load()
+    video.play().catch(() => {})
+  }, [currentVideo])
+
+  const handleVideoEnd = () => {
+    setTransitioning(true)
+    setTimeout(() => {
+      setCurrentVideo(prev => (prev + 1) % videos.length)
+      setTimeout(() => setTransitioning(false), 500)
+    }, 500)
+  }
+
+  const switchVideo = (index) => {
+    setTransitioning(true)
+    setTimeout(() => {
+      setCurrentVideo(index)
+      setTimeout(() => setTransitioning(false), 500)
+    }, 500)
+  }
+
   return (
     <div className="flex flex-col">
 
       {/* Hero */}
-      <section className="relative min-h-screen flex items-center justify-center bg-cream overflow-hidden">
-        <div className="absolute inset-0 opacity-10"
-          style={{ backgroundImage: 'radial-gradient(circle at 70% 50%, #C9A96E 0%, transparent 60%)' }}
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+
+        {/* Single Video */}
+        <video
+          ref={videoRef}
+          autoPlay
+          muted
+          playsInline
+          onEnded={handleVideoEnd}
+          className="absolute inset-0 w-full h-full object-cover"
         />
-        <div className="relative z-10 text-center px-6 max-w-4xl mx-auto">
-          <p className="font-dm text-xs tracking-[0.3em] uppercase text-taupe mb-6">
+
+        {/* Transition overlay */}
+        <div className={`absolute inset-0 bg-espresso z-10 transition-opacity duration-500 ${
+          transitioning ? 'opacity-100' : 'opacity-0'
+        }`} />
+
+        {/* Dark overlay */}
+        <div className="absolute inset-0 bg-espresso/60 z-20" />
+
+        {/* Content */}
+        <div className="relative z-30 text-center px-6 max-w-4xl mx-auto">
+          <p className="font-dm text-xs tracking-[0.3em] uppercase text-ivory/70 mb-6">
             Advanced Skincare Science
           </p>
-          <h1 className="font-cormorant text-6xl md:text-8xl text-espresso leading-none mb-6">
+          <h1 className="font-cormorant text-6xl md:text-8xl text-ivory leading-none mb-6">
             Timeless Science.<br />
-            <em className="text-taupe">Radiant Skin.</em>
+            <em className="text-gold">Radiant Skin.</em>
           </h1>
-          <p className="font-dm text-base text-taupe max-w-lg mx-auto leading-relaxed mb-10">
+          <p className="font-dm text-base text-ivory/70 max-w-lg mx-auto leading-relaxed mb-10">
             Skincare engineered for how your skin lives. Advanced formulas developed in collaboration with leading skin scientists.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               to="/products"
-              className="bg-mocha text-ivory font-dm text-xs tracking-widest uppercase px-10 py-4 hover:bg-espresso transition-colors"
+              className="bg-ivory text-espresso font-dm text-xs tracking-widest uppercase px-10 py-4 hover:bg-gold transition-colors"
             >
               Shop the Collection
             </Link>
             <button
               onClick={() => setAdvisorOpen(true)}
-              className="border border-mocha text-mocha font-dm text-xs tracking-widest uppercase px-10 py-4 hover:bg-mocha hover:text-ivory transition-colors"
+              className="border border-ivory text-ivory font-dm text-xs tracking-widest uppercase px-10 py-4 hover:bg-ivory hover:text-espresso transition-colors"
             >
               AI Skin Advisor
             </button>
           </div>
         </div>
 
+        {/* Video indicators */}
+        <div className="absolute bottom-16 left-1/2 -translate-x-1/2 flex gap-2 z-30">
+          {videos.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => switchVideo(i)}
+              className={`w-8 h-0.5 transition-all ${
+                i === currentVideo ? 'bg-ivory' : 'bg-ivory/30'
+              }`}
+            />
+          ))}
+        </div>
+
         {/* Scroll indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-bounce">
-          <span className="font-dm text-xs tracking-widest uppercase text-taupe">Scroll</span>
-          <div className="w-px h-8 bg-taupe/40"></div>
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-bounce z-30">
+          <span className="font-dm text-xs tracking-widest uppercase text-ivory/60">Scroll</span>
+          <div className="w-px h-8 bg-ivory/30"></div>
         </div>
       </section>
 

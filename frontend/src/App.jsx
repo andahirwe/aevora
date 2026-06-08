@@ -16,7 +16,14 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
+import Science from './pages/Science'
+import Us from './pages/Us'
 import AdminDashboard from './pages/AdminDashboard'
+import AccountLayout from './pages/account/AccountLayout'
+import AccountOverview from './pages/account/AccountOverview'
+import MyOrders from './pages/account/MyOrders'
+import EditProfile from './pages/account/EditProfile'
+import Security from './pages/account/Security'
 import ProtectedRoute from './components/ProtectedRoute'
 import AdminRoute from './components/AdminRoute'
 
@@ -38,6 +45,8 @@ function App() {
                 <Route path="/register" element={<Register />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password/:token" element={<ResetPassword />} />
+                <Route path="/science" element={<Science />} />
+                <Route path="/us" element={<Us />} />
                 <Route path="/checkout" element={
                   <ProtectedRoute>
                     <Checkout />
@@ -53,6 +62,16 @@ function App() {
                     <AdminDashboard />
                   </AdminRoute>
                 } />
+                <Route path="/account" element={
+                  <ProtectedRoute>
+                    <AccountLayout />
+                  </ProtectedRoute>
+                }>
+                  <Route index element={<AccountOverview />} />
+                  <Route path="orders" element={<MyOrders />} />
+                  <Route path="profile" element={<EditProfile />} />
+                  <Route path="security" element={<Security />} />
+                </Route>
               </Routes>
             </main>
             <Footer />

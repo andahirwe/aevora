@@ -31,12 +31,18 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('aevora_user')
   }
 
+  const updateUser = (updatedData) => {
+    const updated = { ...user, ...updatedData }
+    setUser(updated)
+    localStorage.setItem('aevora_user', JSON.stringify(updated))
+  }
+
   const authHeader = useCallback(() => ({
     headers: { Authorization: `Bearer ${user?.token}` }
   }), [user])
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading, authHeader }}>
+    <AuthContext.Provider value={{ user, login, register, logout, updateUser, loading, authHeader }}>
       {children}
     </AuthContext.Provider>
   )
