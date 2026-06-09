@@ -37,7 +37,7 @@ export default function Products() {
       {/* Header */}
       <div className="relative overflow-hidden min-h-[50vh] flex items-center justify-center">
         <img
-          src="https://images.unsplash.com/photo-1570194065650-d99fb4ee1f93?w=1600&q=80"
+          src="https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=1600&q=80"
           alt="Shop hero"
           className="absolute inset-0 w-full h-full object-cover"
         />

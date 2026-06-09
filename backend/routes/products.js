@@ -1,3 +1,7 @@
+const express = require('express')
+const router = express.Router()
+const Product = require('../models/Product')
+
 const seed = [
   {
     name: 'Purity Foam Cleanser',
@@ -132,3 +136,49 @@ const seed = [
     description: 'A complete 4-step ritual including cleanser, serums, essence and cream.'
   },
 ]
+
+// GET / - list products with optional filter query
+router.get('/', async (req, res) => {
+  try {
+    const filter = {}
+    if (req.query.featured === 'true') filter.featured = true
+    if (req.query.featured === 'false') filter.featured = false
+    if (req.query.category) filter.category = req.query.category
+
+    const products = await Product.find(filter).sort({ createdAt: -1 })
+    res.json(products)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ message: 'Server error' })
+  }
+})
+
+// GET /seed - populate products from seed data if none exist
+router.get('/seed', async (req, res) => {
+  try {
+    const count = await Product.countDocuments()
+    if (count > 0) {
+      return res.json({ message: 'Products already seeded', count })
+    }
+
+    const created = await Product.insertMany(seed)
+    res.json({ message: 'Products seeded', count: created.length })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ message: 'Server error' })
+  }
+})
+
+// GET /:id - get a single product by id
+router.get('/:id', async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id)
+    if (!product) return res.status(404).json({ message: 'Product not found' })
+    res.json(product)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ message: 'Server error' })
+  }
+})
+
+module.exports = router
