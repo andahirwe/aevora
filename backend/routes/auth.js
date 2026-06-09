@@ -102,6 +102,39 @@ router.post('/reset-password/:token', async (req, res) => {
 	}
 })
 
+// POST /contact - public contact form endpoint
+router.post('/contact', async (req, res) => {
+	try {
+		const { name, email, subject, message } = req.body
+		if (!name || !email || !subject || !message) {
+			return res.status(400).json({ message: 'All fields are required' })
+		}
+
+		const transporter = nodemailer.createTransport({
+			host: 'smtp.gmail.com',
+			port: 465,
+			secure: true,
+			auth: {
+				user: process.env.EMAIL_USER,
+				pass: process.env.EMAIL_PASS,
+			},
+		})
+
+		const mailOptions = {
+			from: process.env.EMAIL_USER,
+			to: process.env.EMAIL_USER,
+			subject: `[Aevora Contact] ${subject} — ${name}`,
+			html: `<p><strong>Name:</strong> ${name}</p>\n             <p><strong>Email:</strong> ${email}</p>\n             <p><strong>Subject:</strong> ${subject}</p>\n             <hr />\n             <p>${message.replace(/\n/g, '<br/>')}</p>`,
+		}
+
+		await transporter.sendMail(mailOptions)
+		return res.json({ message: 'Thank you — your message has been sent.' })
+	} catch (err) {
+		console.error('Contact send error', err)
+		res.status(500).json({ message: 'Failed to send message' })
+	}
+})
+
 // GET /profile - Get current user profile (protected)
 router.get('/profile', protect, async (req, res) => {
 	try {

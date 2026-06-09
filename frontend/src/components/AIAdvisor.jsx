@@ -1,5 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 
+const SYSTEM_PROMPT = `You are Aevora's AI Skin Advisor. Aevora sells these products:
+Purity Foam Cleanser $34, Micellar Cleansing Water $28, Cell-Reset Serum $78, 
+Vitamin C Brightening Serum $82, Peptide Renewal Serum $88, Aura Hydration Essence $68,
+Barrier Shield Cream $58, Overnight Repair Mask $55, Lumi Eye Concentrate $65, 
+Dark Circle Eye Serum $59, SPF 50 Defence Fluid $48, Aevora Complete Ritual $229.
+Recommend specific Aevora products based on the customer's skin concerns.
+Be concise, elegant and helpful. Max 3 sentences per response.`
+
 const WELCOME_MSG = {
   role: 'assistant',
   text: "Hello! I'm your Aevora Skin Advisor. Describe your skin concerns and I'll recommend the perfect products for you. ✨"
@@ -12,7 +20,6 @@ export default function AIAdvisor({ isOpen, onClose }) {
   const listRef = useRef(null)
   const prevOpenRef = useRef(false)
 
-  // Reset history when modal opens — during render, not in effect
   if (isOpen && !prevOpenRef.current) {
     prevOpenRef.current = true
     if (history.length > 1) setHistory([WELCOME_MSG])
@@ -37,24 +44,41 @@ export default function AIAdvisor({ isOpen, onClose }) {
     setLoading(true)
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      const t = text.toLowerCase()
-      const reply =
-        t.includes('dry') || t.includes('dehydr')
-          ? 'For dry and dehydrated skin, I recommend the Aura Hydration Essence ($68) for deep barrier hydration, paired with Barrier Shield Cream ($58) to lock in moisture. For best results, try the Aevora Complete Ritual ($229).'
-        : t.includes('oily') || t.includes('acne') || t.includes('breakout')
-          ? 'For oily or acne-prone skin, start with the Purity Foam Cleanser ($34) to balance sebum, then the Cell-Reset Serum ($78) to regulate and renew skin cells.'
-        : t.includes('dark circle') || t.includes('eye') || t.includes('puff')
-          ? 'For the eye area, the Lumi Eye Concentrate ($65) firms and brightens, while the Dark Circle Eye Serum ($59) targets pigmentation directly under the eyes.'
-        : t.includes('glow') || t.includes('dull') || t.includes('bright')
-          ? 'For radiance, the Vitamin C Brightening Serum ($82) is your hero product. Pair it with Micellar Cleansing Water ($28) for a fresh, glowing base.'
-        : t.includes('aging') || t.includes('wrinkle') || t.includes('fine line')
-          ? 'For anti-aging, the Peptide Renewal Serum ($88) stimulates collagen production, and the Overnight Repair Mask ($55) accelerates cellular recovery while you sleep.'
-        : t.includes('sensitive') || t.includes('redness') || t.includes('irritate')
-          ? 'For sensitive skin, the Barrier Shield Cream ($58) calms and protects, and the Purity Foam Cleanser ($34) gently cleanses without stripping the skin.'
-        : t.includes('sun') || t.includes('spf') || t.includes('protect')
-          ? 'For daily protection, the SPF 50 Defense Fluid ($48) shields against UV damage while keeping skin light and breathable.'
-        : 'For a complete skin transformation, I recommend the Aevora Complete Ritual ($229) — our full 4-step skin fitness system covering cleansing, activation, recovery, and maintenance. It is our best value.'
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY
+
+      const conversationHistory = history
+        .filter(m => m.role !== 'assistant' || m.text !== WELCOME_MSG.text)
+        .map(m => ({
+          role: m.role === 'assistant' ? 'model' : 'user',
+          parts: [{ text: m.text }]
+        }))
+
+      conversationHistory.push({
+        role: 'user',
+        parts: [{ text }]
+      })
+
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            system_instruction: {
+              parts: [{ text: SYSTEM_PROMPT }]
+            },
+            contents: conversationHistory,
+            generationConfig: {
+              maxOutputTokens: 200,
+              temperature: 0.7,
+            }
+          })
+        }
+      )
+
+      const data = await res.json()
+      const reply = data.candidates?.[0]?.content?.parts?.[0]?.text
+        || 'I could not process that. Please try again.'
 
       setHistory(h => [...h, { role: 'assistant', text: reply }])
     } catch {
@@ -68,13 +92,10 @@ export default function AIAdvisor({ isOpen, onClose }) {
 
   return (
     <>
-      {/* Overlay */}
       <div
         className="fixed inset-0 bg-espresso/50 z-40 backdrop-blur-sm"
         onClick={onClose}
       />
-
-      {/* Modal */}
       <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center p-4">
         <div className="w-full max-w-2xl bg-ivory rounded-t-2xl shadow-2xl flex flex-col max-h-[80vh]">
 
