@@ -46,20 +46,8 @@ export default function AIAdvisor({ isOpen, onClose }) {
     try {
       const apiKey = import.meta.env.VITE_GEMINI_API_KEY
 
-      const conversationHistory = history
-        .filter(m => m.role !== 'assistant' || m.text !== WELCOME_MSG.text)
-        .map(m => ({
-          role: m.role === 'assistant' ? 'model' : 'user',
-          parts: [{ text: m.text }]
-        }))
-
-      conversationHistory.push({
-        role: 'user',
-        parts: [{ text }]
-      })
-
       const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -67,7 +55,12 @@ export default function AIAdvisor({ isOpen, onClose }) {
             system_instruction: {
               parts: [{ text: SYSTEM_PROMPT }]
             },
-            contents: conversationHistory,
+            contents: [
+              {
+                role: 'user',
+                parts: [{ text }]
+              }
+            ],
             generationConfig: {
               maxOutputTokens: 200,
               temperature: 0.7,
@@ -75,6 +68,16 @@ export default function AIAdvisor({ isOpen, onClose }) {
           })
         }
       )
+
+      if (res.status === 429) {
+        setHistory(h => [...h, {
+          role: 'assistant',
+          text: 'I am receiving too many requests right now. Please wait a moment and try again. 🙏'
+        }])
+        return
+      }
+
+      if (!res.ok) throw new Error(`API error: ${res.status}`)
 
       const data = await res.json()
       const reply = data.candidates?.[0]?.content?.parts?.[0]?.text
