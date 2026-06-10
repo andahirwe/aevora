@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    container_name: aevora_backend
+    ports:
+      - "5000:5000"
+    environment:
+      - MONGO_URI=${MONGO_URI}
+      - JWT_SECRET=${JWT_SECRET}
+      - EMAIL_USER=${EMAIL_USER}
+      - EMAIL_PASS=${EMAIL_PASS}
+      - CLIENT_URL=${CLIENT_URL}
+    networks:
+      - aevora_network
+
+  frontend:
+    build: ./frontend
+    container_name: aevora_frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - aevora_network
+
+networks:
+  aevora_network:
+    driver: bridge
